@@ -40,6 +40,8 @@ class Defaults {
             'end_time' => '23:00',
             'wrap_to_next_day' => false,
             'device_visibility' => array('desktop', 'tablet', 'mobile'),
+            'font_family' => 'inherit',
+            'google_font_name' => '',
             'debug_logging' => false
         );
     }

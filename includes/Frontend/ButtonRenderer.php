@@ -47,7 +47,7 @@ class ButtonRenderer {
             array('font-awesome'),
             $version
         );
-        
+
         wp_enqueue_script(
             'fbcn-frontend-script',
             FBCN_PLUGIN_URL . 'assets/js/frontend.js',
@@ -55,7 +55,12 @@ class ButtonRenderer {
             $version,
             true
         );
-        
+
+        // Enqueue Google Font if Pro is active and a Google Font is selected
+        if (defined('FBCN_PRO_ACTIVE') && FBCN_PRO_ACTIVE) {
+            $this->maybe_enqueue_google_font();
+        }
+
         // Pass settings to JavaScript for dynamic styling
         $basic_settings = get_option('fbcn_basic_settings', Defaults::get_basic_settings());
         
@@ -146,6 +151,14 @@ class ButtonRenderer {
             $horizontal_position . ': 20px',
             'top: ' . $vertical_percentage . '%'
         );
+
+        // Add font family if Pro is active
+        if (defined('FBCN_PRO_ACTIVE') && FBCN_PRO_ACTIVE) {
+            $font_css = $this->get_font_css($pro_settings);
+            if (!empty($font_css)) {
+                $inline_styles[] = 'font-family: ' . $font_css;
+            }
+        }
         
         // Render the button with text and icon
         ?>
@@ -269,7 +282,7 @@ class ButtonRenderer {
     public function get_visibility_debug_info() {
         $basic_settings = get_option('fbcn_basic_settings', Defaults::get_basic_settings());
         $pro_settings = get_option('fbcn_pro_settings', Defaults::get_pro_settings());
-        
+
         $debug_info = array(
             'enabled' => $basic_settings['enable'] ?? false,
             'phone_valid' => !empty($basic_settings['phone_number']) && preg_match('/^\+1-\d{3}-\d{3}-\d{4}$/', $basic_settings['phone_number']),
@@ -279,9 +292,84 @@ class ButtonRenderer {
             'current_day' => wp_date('l'),
             'should_display' => $this->should_display_button()
         );
-        
+
         Logger::info('Visibility check: ' . json_encode($debug_info));
-        
+
         return $debug_info;
+    }
+
+    /**
+     * Maybe enqueue Google Font if selected
+     */
+    private function maybe_enqueue_google_font() {
+        $pro_settings = get_option('fbcn_pro_settings', Defaults::get_pro_settings());
+
+        if (($pro_settings['font_family'] ?? '') === 'google' && !empty($pro_settings['google_font_name'])) {
+            $font_name = $pro_settings['google_font_name'];
+            $font_url = 'https://fonts.googleapis.com/css2?family=' . urlencode($font_name) . ':wght@400;700&display=swap';
+
+            wp_enqueue_style(
+                'fbcn-google-font',
+                $font_url,
+                array(),
+                null
+            );
+        }
+    }
+
+    /**
+     * Get CSS font-family value
+     *
+     * @param array $pro_settings Pro settings array
+     * @return string CSS font-family value
+     */
+    private function get_font_css($pro_settings) {
+        $font_key = $pro_settings['font_family'] ?? 'inherit';
+
+        switch ($font_key) {
+            case 'inherit':
+                return '';
+
+            case 'google':
+                $google_font = $pro_settings['google_font_name'] ?? '';
+                if (!empty($google_font)) {
+                    // Add quotes if font name contains spaces
+                    if (strpos($google_font, ' ') !== false) {
+                        return '"' . $google_font . '", sans-serif';
+                    } else {
+                        return $google_font . ', sans-serif';
+                    }
+                }
+                return '';
+
+            case 'divi_body':
+                if (function_exists('et_get_option')) {
+                    $font = et_get_option('body_font', '');
+                    if ($font) {
+                        $font_parts = explode('|', $font);
+                        $font_name = $font_parts[0];
+                        if ($font_name && $font_name !== 'none') {
+                            return '"' . $font_name . '", sans-serif';
+                        }
+                    }
+                }
+                return '';
+
+            case 'divi_heading':
+                if (function_exists('et_get_option')) {
+                    $font = et_get_option('heading_font', '');
+                    if ($font) {
+                        $font_parts = explode('|', $font);
+                        $font_name = $font_parts[0];
+                        if ($font_name && $font_name !== 'none') {
+                            return '"' . $font_name . '", sans-serif';
+                        }
+                    }
+                }
+                return '';
+
+            default:
+                return '';
+        }
     }
 }

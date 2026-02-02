@@ -232,6 +232,15 @@ class Settings {
             'fbcn_pro_section'
         );
         
+        // Font Family field
+        add_settings_field(
+            'font_family',
+            __('Font Family', 'fb-call-now'),
+            array($this, 'font_family_field_callback'),
+            'fbcn_pro_settings',
+            'fbcn_pro_section'
+        );
+
         // Debug Logging field
         add_settings_field(
             'debug_logging',
@@ -291,6 +300,7 @@ class Settings {
         $sanitized = array_merge($sanitized, $this->sanitize_days_visible($input));
         $sanitized = array_merge($sanitized, $this->sanitize_time_window($input));
         $sanitized = array_merge($sanitized, $this->sanitize_device_visibility($input));
+        $sanitized = array_merge($sanitized, $this->sanitize_font_settings($input));
         $sanitized = array_merge($sanitized, $this->sanitize_debug_logging($input));
         
         Logger::info('Pro Settings saved: ' . json_encode($sanitized));
@@ -386,8 +396,37 @@ class Settings {
     }
     
     /**
+     * Sanitize font settings
+     *
+     * @param array $input Raw input data
+     * @return array Sanitized font settings data
+     */
+    private function sanitize_font_settings($input) {
+        $sanitized = array();
+
+        // Font family
+        $valid_font_sources = array('inherit', 'google', 'divi_body', 'divi_heading');
+        $font_family = sanitize_text_field($input['font_family'] ?? 'inherit');
+
+        if (in_array($font_family, $valid_font_sources)) {
+            $sanitized['font_family'] = $font_family;
+        } else {
+            $sanitized['font_family'] = 'inherit';
+        }
+
+        // Google font name (only sanitize if google is selected)
+        if ($sanitized['font_family'] === 'google') {
+            $sanitized['google_font_name'] = sanitize_text_field($input['google_font_name'] ?? '');
+        } else {
+            $sanitized['google_font_name'] = '';
+        }
+
+        return $sanitized;
+    }
+
+    /**
      * Sanitize debug logging setting
-     * 
+     *
      * @param array $input Raw input data
      * @return array Sanitized debug logging data
      */
@@ -426,6 +465,21 @@ class Settings {
             $version,
             true
         );
+
+        // Enqueue font search script on Pro settings page
+        if (strpos($hook, 'fbcn_pro_settings') !== false && defined('FBCN_PRO_ACTIVE') && FBCN_PRO_ACTIVE) {
+            wp_enqueue_script(
+                'fbcn-font-search',
+                FBCN_PLUGIN_URL . 'assets/js/font-search.js',
+                array('jquery'),
+                $version,
+                true
+            );
+
+            wp_localize_script('fbcn-font-search', 'fbcn_font_search', array(
+                'plugin_url' => FBCN_PLUGIN_URL
+            ));
+        }
     }
     
     /**
@@ -862,6 +916,88 @@ class Settings {
         <input type="checkbox" id="debug_logging" name="fbcn_pro_settings[debug_logging]" value="1" <?php echo $checked; ?> />
         <label for="debug_logging"><?php _e('Enable debug logging and show Debug Log menu', 'fb-call-now'); ?></label>
         <p class="description"><?php _e('When enabled, plugin activity will be logged and a Debug Log page will appear in the menu for troubleshooting.', 'fb-call-now'); ?></p>
+        <?php
+    }
+
+    /**
+     * Font family field callback
+     */
+    public function font_family_field_callback() {
+        $options = get_option('fbcn_pro_settings', Defaults::get_pro_settings());
+        $current_font = $options['font_family'] ?? 'inherit';
+        $google_font_name = $options['google_font_name'] ?? '';
+
+        // Font source options
+        $font_sources = array(
+            'inherit' => __('Inherit from Theme', 'fb-call-now'),
+            'google' => __('Google Font', 'fb-call-now')
+        );
+
+        // Check for Divi fonts
+        if (function_exists('et_get_option')) {
+            $divi_body = et_get_option('body_font', '');
+            $divi_heading = et_get_option('heading_font', '');
+            if (!empty($divi_body)) {
+                $font_sources['divi_body'] = __('Divi Body Font', 'fb-call-now');
+            }
+            if (!empty($divi_heading) && $divi_heading !== $divi_body) {
+                $font_sources['divi_heading'] = __('Divi Heading Font', 'fb-call-now');
+            }
+        }
+        ?>
+        <div class="fbcn-font-selector">
+            <select name="fbcn_pro_settings[font_family]" id="font_family" class="fbcn-font-source">
+                <?php foreach ($font_sources as $value => $label) : ?>
+                    <option value="<?php echo esc_attr($value); ?>" <?php selected($current_font, $value); ?>>
+                        <?php echo esc_html($label); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <div id="google_font_search" class="fbcn-google-font-search" style="margin-top: 10px; <?php echo ($current_font !== 'google') ? 'display: none;' : ''; ?>">
+                <input type="text"
+                       id="google_font_input"
+                       name="fbcn_pro_settings[google_font_name]"
+                       value="<?php echo esc_attr($google_font_name); ?>"
+                       placeholder="<?php _e('Search for a Google Font...', 'fb-call-now'); ?>"
+                       class="regular-text"
+                       autocomplete="off">
+                <div id="google_font_suggestions" class="fbcn-font-suggestions" style="display: none;"></div>
+                <p class="description">
+                    <?php _e('Start typing to search from 100+ Google Fonts. The selected font will be automatically loaded on your site.', 'fb-call-now'); ?>
+                </p>
+            </div>
+        </div>
+        <style>
+        .fbcn-font-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 300px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .fbcn-font-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .fbcn-font-suggestion:hover,
+        .fbcn-font-suggestion.selected {
+            background: #f0f0f0;
+        }
+        .fbcn-font-suggestion-name {
+            font-weight: bold;
+        }
+        .fbcn-font-suggestion-category {
+            font-size: 11px;
+            color: #666;
+            margin-left: 5px;
+        }
+        </style>
         <?php
     }
 }
