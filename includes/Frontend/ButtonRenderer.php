@@ -51,7 +51,7 @@ class ButtonRenderer {
         wp_enqueue_script(
             'fbcn-frontend-script',
             FBCN_PLUGIN_URL . 'assets/js/frontend.js',
-            array(),
+            array('jquery'), // frontend.js is wrapped in (function($){...})(jQuery)
             $version,
             true
         );
