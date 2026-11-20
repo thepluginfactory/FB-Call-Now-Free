@@ -338,20 +338,23 @@
         var buttonColor = fbcnSettings.buttonColor || '#007cba';
         var textColor = fbcnSettings.textColor || '#ffffff';
 
-        // Create modal HTML
+        // Create the modal from fixed markup only. The title, number and colors
+        // come from settings and the page, so they are set as text and CSS,
+        // never concatenated into HTML (CR276: an entity-encoded tag in the
+        // button text came back decoded from .text() and ran as markup).
         var modalHtml = [
             '<div id="fbcn-phone-modal" class="fbcn-modal-overlay">',
             '  <div class="fbcn-modal-content">',
             '    <div class="fbcn-modal-header">',
-            '      <h3>' + modalTitle + '</h3>',
+            '      <h3></h3>',
             '      <button class="fbcn-modal-close" aria-label="Close">&times;</button>',
             '    </div>',
             '    <div class="fbcn-modal-body">',
             '      <div class="fbcn-phone-display">',
-            '        <i class="fas fa-phone fbcn-modal-icon" style="color: ' + buttonColor + ';"></i>',
-            '        <div class="fbcn-phone-number">' + displayNumber + '</div>',
+            '        <i class="fas fa-phone fbcn-modal-icon"></i>',
+            '        <div class="fbcn-phone-number"></div>',
             '      </div>',
-            '      <button class="fbcn-copy-button" style="background-color: ' + buttonColor + '; color: ' + textColor + ';">',
+            '      <button class="fbcn-copy-button">',
             '        <i class="fas fa-copy"></i> Copy Number',
             '      </button>',
             '      <div class="fbcn-copy-feedback" style="display: none;">Number copied!</div>',
@@ -365,6 +368,10 @@
 
         // Get modal elements
         var $modal = $('#fbcn-phone-modal');
+        $modal.find('.fbcn-modal-header h3').text(modalTitle);
+        $modal.find('.fbcn-phone-number').text(displayNumber);
+        $modal.find('.fbcn-modal-icon').css('color', buttonColor);
+        $modal.find('.fbcn-copy-button').css({ 'background-color': buttonColor, 'color': textColor });
         var $closeBtn = $modal.find('.fbcn-modal-close');
         var $copyBtn = $modal.find('.fbcn-copy-button');
         var $feedback = $modal.find('.fbcn-copy-feedback');
