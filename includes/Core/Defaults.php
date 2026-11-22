@@ -37,7 +37,7 @@ class Defaults {
         return array(
             'days_visible' => array('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'),
             'start_time' => '00:00',
-            'end_time' => '23:00',
+            'end_time' => '24:00',
             'wrap_to_next_day' => false,
             'device_visibility' => array('desktop', 'tablet', 'mobile'),
             'font_family' => 'inherit',

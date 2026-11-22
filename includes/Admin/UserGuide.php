@@ -91,7 +91,7 @@ class UserGuide {
                         </li>
                         <li>
                             <strong><?php _e('Time Window:', 'fb-call-now'); ?></strong>
-                            <?php _e('Set specific hours when the button should be visible. Start/End Time use 24-hour format. Default is 00:00 to 23:00 (all day).', 'fb-call-now'); ?>
+                            <?php _e('Set specific hours when the button should be visible. Start/End Time use 24-hour format. Default is 00:00 to 24:00 (all day). The end time is not included, so choose 24:00 (end of day) to keep the button up until midnight.', 'fb-call-now'); ?>
                         </li>
                         <li>
                             <strong><?php _e('Wrap to Next Day:', 'fb-call-now'); ?></strong>

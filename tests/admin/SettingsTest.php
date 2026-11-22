@@ -201,7 +201,7 @@ class SettingsTest extends TestCase {
         
         // Should fallback to defaults
         $this->assertEquals('00:00', $result['start_time']);
-        $this->assertEquals('23:00', $result['end_time']);
+        $this->assertEquals('24:00', $result['end_time']);
     }
     
     /**
@@ -218,7 +218,7 @@ class SettingsTest extends TestCase {
         
         // Should be corrected to defaults due to validation error
         $this->assertEquals('00:00', $result['start_time']);
-        $this->assertEquals('23:00', $result['end_time']);
+        $this->assertEquals('24:00', $result['end_time']);
     }
     
     /**

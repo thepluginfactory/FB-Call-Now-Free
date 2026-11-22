@@ -340,7 +340,7 @@ class Settings {
         
         // Sanitize individual time values
         $start_time = sanitize_text_field($input['start_time'] ?? '00:00');
-        $end_time = sanitize_text_field($input['end_time'] ?? '23:00');
+        $end_time = sanitize_text_field($input['end_time'] ?? '24:00');
         
         // Validate time format
         if (preg_match('/^([0-1][0-9]|2[0-3]):00$/', $start_time)) {
@@ -349,10 +349,11 @@ class Settings {
             $sanitized['start_time'] = '00:00';
         }
         
-        if (preg_match('/^([0-1][0-9]|2[0-3]):00$/', $end_time)) {
+        // End is exclusive, so 24:00 (end of day) is the only way to keep the last hour (CR278)
+        if (preg_match('/^(([0-1][0-9]|2[0-3]):00|24:00)$/', $end_time)) {
             $sanitized['end_time'] = $end_time;
         } else {
-            $sanitized['end_time'] = '23:00';
+            $sanitized['end_time'] = '24:00';
         }
         
         // Handle wrap to next day setting
@@ -367,7 +368,7 @@ class Settings {
             if ($start_hour > $end_hour) {
                 add_settings_error('fbcn_pro_settings', 'invalid_time_window', __('Start time cannot be later than end time unless "Wrap to Next Day" is enabled.', 'fb-call-now'));
                 $sanitized['start_time'] = '00:00';
-                $sanitized['end_time'] = '23:00';
+                $sanitized['end_time'] = '24:00';
             }
         }
         
@@ -840,7 +841,7 @@ class Settings {
     public function time_window_field_callback() {
         $options = get_option('fbcn_pro_settings', Defaults::get_pro_settings());
         $start_time = $options['start_time'] ?? '00:00';
-        $end_time = $options['end_time'] ?? '23:00';
+        $end_time = $options['end_time'] ?? '24:00';
         $wrap_to_next_day = isset($options['wrap_to_next_day']) && $options['wrap_to_next_day'];
         
         // Generate time options
@@ -849,6 +850,8 @@ class Settings {
             $time_key = sprintf('%02d:00', $hour);
             $time_options[$time_key] = $time_key;
         }
+        // The end time is exclusive: 24:00 keeps the button up through 23:59 (CR278)
+        $end_time_options = $time_options + array('24:00' => __('24:00 (end of day)', 'fb-call-now'));
         ?>
         <table class="form-table">
             <tr>
@@ -863,7 +866,7 @@ class Settings {
                 <td>
                     <label for="end_time"><?php _e('End Time:', 'fb-call-now'); ?></label>
                     <select name="fbcn_pro_settings[end_time]" id="end_time">
-                        <?php foreach ($time_options as $key => $label): ?>
+                        <?php foreach ($end_time_options as $key => $label): ?>
                             <option value="<?php echo $key; ?>" <?php selected($end_time, $key); ?>><?php echo $label; ?></option>
                         <?php endforeach; ?>
                     </select>

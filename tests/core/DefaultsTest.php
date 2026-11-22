@@ -64,7 +64,7 @@ class DefaultsTest extends TestCase {
         $expected_days = array('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');
         $this->assertEquals($expected_days, $defaults['days_visible']);
         $this->assertEquals('00:00', $defaults['start_time']);
-        $this->assertEquals('23:00', $defaults['end_time']);
+        $this->assertEquals('24:00', $defaults['end_time']);
         $this->assertFalse($defaults['wrap_to_next_day']);
         
         $expected_devices = array('desktop', 'tablet', 'mobile');

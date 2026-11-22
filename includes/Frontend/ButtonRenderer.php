@@ -240,7 +240,7 @@ class ButtonRenderer {
      */
     private function is_visible_now($pro_settings) {
         $start_time = $pro_settings['start_time'] ?? '00:00';
-        $end_time = $pro_settings['end_time'] ?? '23:00';
+        $end_time = $pro_settings['end_time'] ?? '24:00';
         $wrap_to_next_day = $pro_settings['wrap_to_next_day'] ?? false;
         
         // Get current time in site timezone
@@ -254,10 +254,8 @@ class ButtonRenderer {
         // Log for debugging
         Logger::info("Time check: Current={$current_time} ({$current_minutes}min), Start={$start_time} ({$start_minutes}min), End={$end_time} ({$end_minutes}min)");
         
-        // Handle time window logic
-        if ($wrap_to_next_day && $end_minutes === 23 * 60) {
-            $is_visible = ($current_minutes >= $start_minutes || $current_minutes === 0);
-        } elseif ($start_minutes <= $end_minutes) {
+        // Handle time window logic (end is exclusive; 24:00 = end of day, CR278)
+        if ($start_minutes <= $end_minutes) {
             // Same day: visible from start time until (but not including) end time
             $is_visible = ($current_minutes >= $start_minutes && $current_minutes < $end_minutes);
         } else {
