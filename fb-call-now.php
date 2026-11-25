@@ -31,6 +31,7 @@ require_once FBCN_PLUGIN_DIR . 'vendor/autoload.php';
 
 use FBCallNow\Core\Logger;
 use FBCallNow\Core\Defaults;
+use FBCallNow\Core\Upgrade;
 use FBCallNow\Admin\Settings;
 use FBCallNow\Frontend\ButtonRenderer;
 use FBCallNow\Admin\UserGuide;
@@ -73,6 +74,7 @@ class FB_Call_Now
     {
         // Hook into WordPress
         add_action('plugins_loaded', array($this, 'load_textdomain'));
+        add_action('plugins_loaded', array(Upgrade::class, 'maybe_upgrade'));
         add_action('init', array($this, 'init_components'));
 
         // Activation and deactivation hooks
