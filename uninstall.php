@@ -63,6 +63,21 @@ function fbcn_cleanup_plugin_data() {
     if (file_exists($log_file)) {
         unlink($log_file);
     }
+
+    // And the private log folder (CR275)
+    $log_key = (string) get_option('fbcn_log_dir_key', '');
+    if (preg_match('/^[A-Za-z0-9]{20,}$/', $log_key)) {
+        $log_dir = trailingslashit($upload_dir['basedir']) . 'fbcn-logs-' . $log_key;
+        foreach (array('debug.php', 'debug-old.php', '.htaccess', 'index.php') as $f) {
+            if (file_exists($log_dir . '/' . $f)) {
+                unlink($log_dir . '/' . $f);
+            }
+        }
+        if (is_dir($log_dir)) {
+            @rmdir($log_dir);
+        }
+    }
+    delete_option('fbcn_log_dir_key');
     
     // Clear any cached data
     wp_cache_delete('fbcn_basic_settings', 'options');

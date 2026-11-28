@@ -71,8 +71,6 @@ class Settings {
         
         // Remove the duplicate top-level menu link
         remove_submenu_page('fb-call-now', 'fb-call-now');
-        
-        Logger::info('Admin menu initialized');
     }
     
     /**

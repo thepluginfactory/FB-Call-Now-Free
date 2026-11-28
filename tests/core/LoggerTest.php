@@ -84,7 +84,7 @@ class LoggerTest extends TestCase {
      */
     public function test_log_file_path() {
         $path = Logger::get_log_file_path();
-        $this->assertStringEndsWith('fb-call-now.log', $path);
+        $this->assertStringEndsWith('/debug.php', $path); // private folder since CR275
     }
     
     /**

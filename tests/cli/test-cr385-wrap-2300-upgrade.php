@@ -36,6 +36,9 @@ namespace {
         return array_key_exists($name, $GLOBALS['fbcn_options']) ? $GLOBALS['fbcn_options'][$name] : $default;
     }
     function update_option($name, $value, $autoload = null) { $GLOBALS['fbcn_options'][$name] = $value; return true; }
+    // The upgrade also looks for the old public log (CR275); point it at an empty folder.
+    function wp_upload_dir() { return array('basedir' => sys_get_temp_dir() . '/fbcn-cr385-none'); }
+    function trailingslashit($s) { return rtrim($s, '/') . '/'; }
 
     require __DIR__ . '/../../fb-call-now.php';
 

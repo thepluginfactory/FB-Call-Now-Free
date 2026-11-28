@@ -17,7 +17,7 @@ class Upgrade {
     /**
      * Current database version
      */
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;
 
     /**
      * Run any upgrades this site has not had yet
@@ -30,6 +30,10 @@ class Upgrade {
 
         if ($from < 1) {
             self::upgrade_wrap_end_of_day();
+        }
+        if ($from < 2) {
+            // CR275: the old log sat at a public uploads/fb-call-now.log
+            Logger::secure_legacy_log();
         }
 
         update_option(self::OPTION, self::DB_VERSION);
